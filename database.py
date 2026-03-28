@@ -11,6 +11,7 @@ def get_conn():
     return psycopg.connect(DATABASE_URL)
 
 def init_db():
+    print(f"DATABASE_URL: {DATABASE_URL}")  # add this line
     conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("""
@@ -26,6 +27,7 @@ def init_db():
     conn.commit()
     conn.close()
     print("Database initialized")
+    
 
 def save_jobs(jobs):
     conn = get_conn()
