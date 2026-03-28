@@ -1,12 +1,21 @@
-import sqlite3
+import psycopg2
+import os
+from dotenv import load_dotenv
 from datetime import datetime
 
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+def get_conn():
+    return psycopg2.connect(DATABASE_URL)
+
 def init_db():
-    conn = sqlite3.connect("jobs.db")
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS jobs (
-            id INTEGER PRIMARY KEY,
+            id BIGINT PRIMARY KEY,
             title TEXT NOT NULL,
             company TEXT,
             url TEXT UNIQUE NOT NULL,
@@ -19,11 +28,7 @@ def init_db():
     print("Database initialized")
 
 def save_jobs(jobs):
-    """
-    Save jobs to database.
-    Returns only NEW jobs that weren't in database before.
-    """
-    conn = sqlite3.connect("jobs.db")
+    conn = get_conn()
     cursor = conn.cursor()
     
     new_jobs = []
@@ -31,7 +36,8 @@ def save_jobs(jobs):
         try:
             cursor.execute("""
                 INSERT INTO jobs (id, title, company, url, posted_at, scraped_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (id) DO NOTHING
             """, (
                 job["id"],
                 job["title"],
@@ -40,18 +46,18 @@ def save_jobs(jobs):
                 job["posted_at"],
                 job["scraped_at"]
             ))
-            new_jobs.append(job)
-        except sqlite3.IntegrityError:
-            # Already exists - skip
-            pass
+            if cursor.rowcount > 0:
+                new_jobs.append(job)
+        except Exception as e:
+            print(f"Error saving job {job['id']}: {e}")
+            continue
     
     conn.commit()
     conn.close()
     return new_jobs
 
 def get_all_jobs():
-    """Return all jobs from database"""
-    conn = sqlite3.connect("jobs.db")
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM jobs ORDER BY posted_at DESC")
     jobs = cursor.fetchall()
