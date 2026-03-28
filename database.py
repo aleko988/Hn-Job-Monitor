@@ -1,4 +1,4 @@
-import psycopg2
+import psycopg
 import os
 from dotenv import load_dotenv
 from datetime import datetime
@@ -8,7 +8,7 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_conn():
-    return psycopg2.connect(DATABASE_URL)
+    return psycopg.connect(DATABASE_URL)
 
 def init_db():
     conn = get_conn()
