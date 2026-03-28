@@ -74,6 +74,42 @@ def extract_company(title):
     if " is hiring" in title.lower():
         return title.lower().split(" is hiring")[0].strip().title()
     return "Unknown"
+def get_new_job_ids(existing_ids):
+    """Only return IDs that aren't in database yet"""
+    all_ids = get_job_ids()
+    new_ids = [id for id in all_ids if id not in existing_ids]
+    return new_ids
+
+def scrape_new_jobs_only(existing_ids):
+    """Only fetch details for new jobs"""
+    new_ids = get_new_job_ids(existing_ids)
+    
+    if not new_ids:
+        print("No new job IDs found")
+        return []
+    
+    print(f"Found {len(new_ids)} new job IDs - fetching details...")
+    jobs = []
+    for job_id in new_ids:
+        try:
+            job_data = get_job_details(job_id)
+            if job_data:
+                jobs.append({
+                    "id": job_id,
+                    "title": job_data.get("title", "No title"),
+                    "company": extract_company(job_data.get("title", "")),
+                    "url": job_data.get("url", f"https://news.ycombinator.com/item?id={job_id}"),
+                    "posted_at": datetime.fromtimestamp(
+                        job_data.get("time", 0)
+                    ).strftime("%Y-%m-%d %H:%M:%S"),
+                    "scraped_at": str(datetime.now())
+                })
+            time.sleep(0.1)
+        except Exception as e:
+            print(f"Failed to fetch job {job_id}: {e}")
+            continue
+    
+    return jobs
 
 if __name__ == "__main__":
     jobs = scrape_hn_jobs(limit=50)

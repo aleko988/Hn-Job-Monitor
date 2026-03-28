@@ -66,6 +66,15 @@ def get_all_jobs():
     conn.close()
     return jobs
 
+def get_existing_ids():
+    """Return set of all job IDs already in database"""
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM jobs")
+    ids = {row[0] for row in cursor.fetchall()}
+    conn.close()
+    return ids
+
 if __name__ == "__main__":
     init_db()
     print(f"Total jobs in database: {len(get_all_jobs())}")

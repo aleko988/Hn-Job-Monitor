@@ -1,24 +1,20 @@
-from scraper import scrape_hn_jobs
-from database import init_db, save_jobs, get_all_jobs
+from scraper import scrape_new_jobs_only
+from database import init_db, save_jobs, get_all_jobs, get_existing_ids
 from telegram_bot import send_job_alert, send_message
 
 def run():
     print("Starting job monitor...")
-    
-    # Initialize database
     init_db()
     
-    # Scrape jobs
-    jobs = scrape_hn_jobs(limit=50)
+    # Get existing IDs from database
+    existing_ids = get_existing_ids()
+    print(f"Jobs already in database: {len(existing_ids)}")
     
-    # Save to database - returns only NEW jobs
-    new_jobs = save_jobs(jobs)
-    
-    print(f"\nTotal scraped: {len(jobs)}")
-    print(f"New jobs found: {len(new_jobs)}")
-    print(f"Total in database: {len(get_all_jobs())}")
+    # Only scrape NEW jobs
+    new_jobs = scrape_new_jobs_only(existing_ids)
     
     if new_jobs:
+        save_jobs(new_jobs)
         send_message(f"🔍 Found {len(new_jobs)} new jobs!")
         for job in new_jobs:
             send_job_alert(job)
