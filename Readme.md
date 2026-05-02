@@ -32,7 +32,7 @@ Automated job monitoring system that scrapes HackerNews Jobs API every hour and 
 - API: https://hn-job-monitor.onrender.com/jobs
 
 ## Screenshots
-![Dashboard](screenshots/dashboard_screen.png)
+![Dashboard](screenshots/Dashboard_screen.png)
 ![Telegram Alert](screenshots/telegram_screen.png)
 
 ## Setup
